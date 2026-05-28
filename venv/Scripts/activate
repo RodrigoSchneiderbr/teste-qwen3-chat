@@ -35,7 +35,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\Users\schne\OneDrive\Desktop\Scoras_notebook\SML\Ollama\venv"
+VIRTUAL_ENV="C:\Users\schne\OneDrive\Desktop\Scoras_notebook\SML\Ollama\teste-qwen3-chat\venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

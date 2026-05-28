@@ -1,2 +1,15 @@
-api_clima.py
-PyWhatKit_DB.txt
+# Ignora o ambiente virtual
+venv/
+.venv/
+
+# Ignora arquivos de cache do Python
+__pycache__/
+*.pyc
+
+# Ignora seus PDFs (se não quiser torná-los públicos)
+*.pdf
+
+# Ignora o banco de dados do Chroma (caso você decida salvar em disco no futuro)
+chroma_db/
+
+conversar.py
