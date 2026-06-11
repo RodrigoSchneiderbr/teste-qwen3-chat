@@ -3,11 +3,13 @@
 Este repositório contém as instruções e o script necessário (`conversar_rag.py`) para interagir com um modelo de inteligência artificial rodando localmente na sua máquina, utilizando o **Ollama**.
 
 Podendo colocar um arquivo em pdf para ele buscar dados dentro deste arquivo
+Acesse o site oficial de download: ollama.com/download
 
+**Ollama** instalado para rodar os modelos locais de IA:
+   * Acesse o site oficial de download: [ollama.com/download](https://ollama.com/download)
 ---
 
 ## 📋 Pré-requisitos
-
 Antes de começar, certifique-se de ter as seguintes ferramentas instaladas no seu sistema:
 
 * **[Python 3.8+](https://www.python.org/downloads/)**: Para gerenciar o ambiente virtual e executar o script.
