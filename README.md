@@ -49,3 +49,12 @@ streamlit run conversas_rag.py
 
 Para usar digite seu nome no nome de usuario.
 Obs: caso coloque um documento em pdf o chat irá buscar respostas usando o RAG, caso não coloque irá usar a base treinada do qwen 3.6b
+
+# 🚀 Guia de Configuração: Modelo Local com Ollama (Qwen) com DOCKER
+
+### 1. Construir o container
+
+``` text
+docker-compose up -d --build
+```
+Depois somente acessar http://localhost:8501

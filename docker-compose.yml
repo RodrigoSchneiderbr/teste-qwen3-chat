@@ -1,0 +1,31 @@
+services:
+  app:
+    build: .
+    container_name: avaliador_app
+    ports:
+      - "8501:8501"
+    environment:
+      - OLLAMA_HOST=http://ollama:11434 
+    depends_on:
+      - ollama
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama 
+
+  # Serviço temporário para baixar os modelos automaticamente!
+  iniciador_modelos:
+    image: ollama/ollama:latest
+    container_name: iniciador_modelos
+    depends_on:
+      - ollama
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    command: sh -c "sleep 5 && ollama pull qwen3:0.6b && ollama pull nomic-embed-text"
+
+volumes:
+  ollama_data:
