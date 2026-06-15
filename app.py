@@ -1,7 +1,7 @@
 import os
 import tempfile
 import streamlit as st
-from conversar_rag import preparar_banco_de_dados_pdf, gerar_resposta_stream
+from conversar_rag import preparar_banco_de_dados, gerar_resposta_stream
 
 # ==========================================
 # CONFIGURAÇÕES DA PÁGINA
@@ -13,8 +13,10 @@ st.set_page_config(page_title="Chat IA com PDF", page_icon="🤖", layout="wide"
 # ==========================================
 if "messages" not in st.session_state:
     st.session_state.messages = []
-if "vectorstore" not in st.session_state:
-    st.session_state.vectorstore = None
+    
+# Atualizado: de 'vectorstore' para 'retrievers' para suportar a Busca Híbrida
+if "retrievers" not in st.session_state:
+    st.session_state.retrievers = None
 
 # ==========================================
 # INTERFACE DO USUÁRIO (BARRA LATERAL)
@@ -23,37 +25,58 @@ with st.sidebar:
     st.header("⚙️ Configurações")
     nome_usuario = st.text_input("Qual é o seu nome?", value="Usuário")
     
-    st.divider()
-    
     st.subheader("📄 Modo RAG (Contexto)")
-    arquivo_pdf = st.file_uploader("Envie um PDF para basear as respostas", type=["pdf"])
+    # 1. Permite pdf E docx
+    arquivo_up = st.file_uploader("Envie um PDF ou DOCX", type=["pdf", "docx"])
     
-    # Processa o PDF apenas se foi enviado e ainda não está no session_state
-    if arquivo_pdf is not None and st.session_state.vectorstore is None:
-        with st.spinner("Processando o PDF e gerando embeddings..."):
+    if arquivo_up is not None and st.session_state.retrievers is None:
+        with st.spinner("Processando o documento e gerando a Busca Híbrida..."):
             try:
-                # Cria um arquivo temporário físico para o PyPDFLoader conseguir ler
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
-                    temp_file.write(arquivo_pdf.read())
+                # 2. Descobre a extensão do arquivo que o usuário subiu (ex: .docx)
+                extensao_original = f".{arquivo_up.name.split('.')[-1]}"
+                
+                # 3. Cria o arquivo temporário usando a extensão correta
+                with tempfile.NamedTemporaryFile(delete=False, suffix=extensao_original) as temp_file:
+                    temp_file.write(arquivo_up.read())
                     temp_path = temp_file.name
 
-                # Chama a função do conversar_rag.py
-                st.session_state.vectorstore = preparar_banco_de_dados_pdf(temp_path)
+                # Chama a função que agora detecta automaticamente
+                st.session_state.retrievers = preparar_banco_de_dados(temp_path)
                 
-                # Exclui o arquivo temporário após o uso
                 os.remove(temp_path)
+                st.success("Documento processado! Modo RAG ativado.")
                 
-                st.success("PDF processado! Modo RAG ativado.")
             except Exception as e:
-                st.error(f"Erro ao processar o PDF: {e}")
+                st.error(f"Erro ao processar: {e}")
                 if 'temp_path' in locals() and os.path.exists(temp_path):
-                    os.remove(temp_path) # Garante que o temporário seja apagado em caso de erro
+                    os.remove(temp_path)
                 
-    elif arquivo_pdf is None and st.session_state.vectorstore is not None:
-        st.session_state.vectorstore = None
-        st.warning("PDF removido. Chat normal ativado.")
+    elif arquivo_up is None and st.session_state.retrievers is not None:
+        st.session_state.retrievers = None
+        st.warning("Documento removido. Chat normal ativado.")
 
     st.divider()
+    
+    # ==========================================
+    # NOVOS CONTROLES DE PESO (SLIDERS)
+    # ==========================================
+    st.subheader("⚖️ Pesos da Busca Híbrida")
+    st.caption("Ajuste como a IA deve procurar as informações no PDF.")
+    
+    peso_denso = st.slider(
+        "🧠 Significado e Contexto", 
+        min_value=0.0, max_value=1.0, value=0.5, step=0.1,
+        help="Aumente para focar em ideias parecidas (Semântica)."
+    )
+    
+    peso_esparso = st.slider(
+        "🔤 Palavras Exatas", 
+        min_value=0.0, max_value=1.0, value=0.5, step=0.1,
+        help="Aumente para procurar por nomes, siglas e números exatos (BM25)."
+    )
+
+    st.divider()
+    
     if st.button("🗑️ Limpar Chat"):
         st.session_state.messages = []
         st.rerun()
@@ -63,8 +86,8 @@ with st.sidebar:
 # ==========================================
 st.title(f"Olá, {nome_usuario}! 👋")
 
-if st.session_state.vectorstore is not None:
-    st.caption("🟢 **Modo RAG Ativado:** A IA usará o PDF fornecido como base de conhecimento.")
+if st.session_state.retrievers is not None:
+    st.caption("🟢 **Modo RAG Ativado:** A IA usará o PDF fornecido com a Busca Híbrida.")
 else:
     st.caption("⚪ **Chat Normal:** A IA usará apenas seu conhecimento pré-treinado.")
 
@@ -83,13 +106,18 @@ if prompt := st.chat_input("Digite sua mensagem..."):
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # 2. Chama o Ollama (via conversar_rag.py) e exibe a resposta escrevendo na tela
+    # 2. Chama o Ollama e exibe a resposta escrevendo na tela
     with st.chat_message("assistant"):
         try:
-            # Obtém o gerador da nossa função modularizada
-            fluxo_resposta = gerar_resposta_stream(prompt, st.session_state.vectorstore)
+            # Obtém o gerador da nossa função, AGORA PASSANDO OS PESOS DO SLIDER
+            fluxo_resposta = gerar_resposta_stream(
+                prompt=prompt, 
+                retrievers=st.session_state.retrievers,
+                peso_denso=peso_denso,
+                peso_esparso=peso_esparso
+            )
             
-            # st.write_stream lida automaticamente com o gerador e cria o efeito máquina de escrever
+            # st.write_stream lida automaticamente com o gerador
             resposta_completa = st.write_stream(fluxo_resposta)
             
             # Salva a resposta no histórico
