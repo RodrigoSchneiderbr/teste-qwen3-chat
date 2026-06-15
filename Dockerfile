@@ -4,6 +4,9 @@ FROM python:3.10-slim
 # Define o diretório de trabalho dentro do contentor
 WORKDIR /app
 
+# Instala dependências do sistema necessárias para o ChromaDB compilar
+RUN apt-get update && apt-get install -y build-essential
+
 # Copia o ficheiro de dependências
 COPY requirements.txt .
 

@@ -17,7 +17,6 @@ services:
     volumes:
       - ollama_data:/root/.ollama 
 
-  # Serviço temporário para baixar os modelos automaticamente!
   iniciador_modelos:
     image: ollama/ollama:latest
     container_name: iniciador_modelos
@@ -25,7 +24,15 @@ services:
       - ollama
     environment:
       - OLLAMA_HOST=http://ollama:11434
-    command: sh -c "sleep 5 && ollama pull qwen3:0.6b && ollama pull nomic-embed-text"
+    # Substitui a trava padrão pelo terminal
+    entrypoint: /bin/sh
+    # O sinal "|" avisa que o que vem abaixo é um script de texto único
+    command: 
+      - -c
+      - |
+        sleep 5
+        ollama pull qwen3:0.6b
+        ollama pull nomic-embed-text
 
 volumes:
   ollama_data:
