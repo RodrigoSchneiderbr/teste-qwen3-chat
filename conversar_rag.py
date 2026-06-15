@@ -113,7 +113,7 @@ def gerar_resposta_stream(prompt, retrievers=None, peso_denso=0.5, peso_esparso=
     for chunk in stream:
         yield chunk['message']['content']
 # ==========================================
-# ÁREA DE TESTE
+# ÁREA DE TESTE  mais para debuga mesmo
 # ==========================================
 if __name__ == "__main__":
     # Substitua pelo nome do seu arquivo PDF real
@@ -123,7 +123,7 @@ if __name__ == "__main__":
         print(f"ERRO: Coloque um arquivo PDF chamado '{caminho_do_meu_pdf}' na mesma pasta do script.")
     else:
         # 1. Prepara o RAG (agora recebe dois retrievers)
-        meus_retrievers = preparar_banco_de_dados_pdf(caminho_do_meu_pdf)
+        meus_retrievers = preparar_banco_de_dados(caminho_do_meu_pdf)
         
         # 2. Faz uma pergunta
         pergunta = "Qual é o assunto principal deste documento?"
