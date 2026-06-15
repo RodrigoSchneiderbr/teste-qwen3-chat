@@ -43,7 +43,7 @@ pip install -r requirements.txt
 ### 4. Rodar o streamlit
 
 ```
-streamlit run conversas_rag.py
+streamlit run app.py
 ```
 
 # 🚀 Guia de Configuração: Modelo Local com Ollama (Qwen) com DOCKER
