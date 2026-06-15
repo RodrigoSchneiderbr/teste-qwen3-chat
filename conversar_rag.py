@@ -5,6 +5,7 @@ from langchain_ollama import OllamaEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_community.retrievers import BM25Retriever
 import os
+from ollama import Client
 
 # ==========================================
 # CONFIGURAÇÕES DOS MODELOS
@@ -53,24 +54,23 @@ def preparar_banco_de_dados(caminho_arquivo):
     print("Banco de dados pronto!\n")
     return retriever_denso, retriever_esparso
 
-def gerar_resposta_stream(prompt, retrievers=None, peso_denso=0.5, peso_esparso=0.5):
-    """
-    Gera a resposta do Ollama fazendo a Busca Híbrida.
-    Pesos são opcionais e, por padrão, valem 50% (0.5) cada.
-    """
-    conteudo_mensagem = prompt
+from ollama import Client # Certifique-se de que isso está no topo do arquivo!
 
+def gerar_resposta_stream(prompt, retrievers=None, peso_denso=0.5, peso_esparso=0.5, historico_chat=[]):
+    """
+    Gera a resposta com Busca Híbrida, Memória de Conversação e suporte ao Docker.
+    """
+    contexto = ""
+
+    # 1. Faz a busca no PDF (se o RAG estiver ativado)
     if retrievers is not None:
         retriever_denso, retriever_esparso = retrievers
         
-        # 1. Faz as buscas nos dois bibliotecários
         docs_semantica = retriever_denso.invoke(prompt)
         docs_palavras = retriever_esparso.invoke(prompt)
         
-        # 2. Dicionário para guardar as notas de cada texto
         pontuacoes = {}
 
-        # Função auxiliar para dar notas aos textos (Rank Fusion)
         def pontuar_docs(docs, peso_da_busca):
             for ranking, doc in enumerate(docs):
                 texto = doc.page_content
@@ -81,31 +81,41 @@ def gerar_resposta_stream(prompt, retrievers=None, peso_denso=0.5, peso_esparso=
                 else:
                     pontuacoes[texto] = nota
 
-        # 3. Aplica o sistema de notas usando os pesos recebidos na função
         pontuar_docs(docs_semantica, peso_denso)
         pontuar_docs(docs_palavras, peso_esparso)
         
-        # 4. Ordena e extrai os 4 melhores textos
         textos_vencedores = sorted(pontuacoes.items(), key=lambda item: item[1], reverse=True)
         melhores_textos = [texto for texto, nota in textos_vencedores[:4]]
         
         contexto = "\n\n---\n\n".join(melhores_textos)
-        
-        conteudo_mensagem = f"""
-        Você é um assistente útil. Use o contexto abaixo, extraído de um documento, para responder à pergunta. 
-        Se não souber a resposta com base no contexto, diga que não sabe.
 
-        CONTEXTO:
-        {contexto}
+    # ==========================================
+    # 2. CONSTRUÇÃO DA MEMÓRIA E CONTEXTO
+    # ==========================================
+    mensagens_para_ia = []
+    
+    # A) Cria a "Voz da Consciência" da IA (System Prompt)
+    instrucao_sistema = "Você é um assistente útil e amigável. Responda de forma clara no idioma do usuário."
+    
+    # Se achou algo no PDF, injeta nas regras do sistema
+    if contexto:
+         instrucao_sistema += f"\n\nUse EXCLUSIVAMENTE o CONTEXTO abaixo para basear sua resposta. Se a resposta não estiver no contexto, diga que não sabe.\n\nCONTEXTO:\n{contexto}"
+         
+    mensagens_para_ia.append({'role': 'system', 'content': instrucao_sistema})
 
-        PERGUNTA DO USUÁRIO: 
-        {prompt}
-        """
+    # B) Injeta todo o histórico da conversa (O Streamlit já manda a nova pergunta junto aqui)
+    for mensagem in historico_chat:
+        mensagens_para_ia.append({'role': mensagem['role'], 'content': mensagem['content']})
 
-    # Chama o modelo Ollama
-    stream = ollama.chat(
+    # ==========================================
+    # 3. CHAMA O OLLAMA (Compatível com Docker)
+    # ==========================================
+    # Lembre-se que URL_OLLAMA foi definido lá em cima no seu arquivo
+    cliente_docker = Client(host=URL_OLLAMA)
+    
+    stream = cliente_docker.chat(
         model=MODELO_CHAT,
-        messages=[{'role': 'user', 'content': conteudo_mensagem}],
+        messages=mensagens_para_ia, # Enviamos a lista de mensagens inteira!
         stream=True,
     )
     

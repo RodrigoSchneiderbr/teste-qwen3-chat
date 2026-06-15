@@ -114,7 +114,8 @@ if prompt := st.chat_input("Digite sua mensagem..."):
                 prompt=prompt, 
                 retrievers=st.session_state.retrievers,
                 peso_denso=peso_denso,
-                peso_esparso=peso_esparso
+                peso_esparso=peso_esparso,
+                historico_chat=st.session_state.messages
             )
             
             # st.write_stream lida automaticamente com o gerador
