@@ -57,3 +57,31 @@ Depois somente acessar http://localhost:8501
 
 Para usar digite seu nome no nome de usuario.
 Obs: caso coloque um documento em pdf o chat irá buscar respostas usando o RAG, caso não coloque irá usar a base treinada do qwen 3.6b
+
+# 🚀 Adicionado para subir com EC2 t3.medium usando terraform
+
+Com terraform e AWS CLI instalados, ja conectados via AWS configure
+
+``` text
+cd infra-aws
+```
+
+Na sequencia 
+
+``` text
+terraform init
+terraform apply
+```
+
+# 🚀 Estrutura do projeto
+
+📁 teste-qwen3-chat/
+ ├── 📄 app.py                # Interface principal do Streamlit
+ ├── 📄 conversar_rag.py      # Lógica do LangChain e Busca Híbrida
+ ├── 📄 requirements.txt      # Dependências do Python
+ ├── 📄 Dockerfile            # Receita da imagem do aplicativo
+ ├── 📄 docker-compose.yml    # Orquestração dos serviços (App + Ollama)
+ ├── 📄 .gitignore            # Ignora arquivos sensíveis e de cache
+ └── 📁 infra-aws/            
+      └── 📄 main.tf          # Código Terraform para deploy na AWS EC2
+
