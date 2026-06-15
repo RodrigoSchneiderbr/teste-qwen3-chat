@@ -75,6 +75,7 @@ terraform apply
 
 # 🚀 Estrutura do projeto
 
+``` text
 📁 teste-qwen3-chat/
  ├── 📄 app.py                # Interface principal do Streamlit
  ├── 📄 conversar_rag.py      # Lógica do LangChain e Busca Híbrida
@@ -84,4 +85,6 @@ terraform apply
  ├── 📄 .gitignore            # Ignora arquivos sensíveis e de cache
  └── 📁 infra-aws/            
       └── 📄 main.tf          # Código Terraform para deploy na AWS EC2
+
+```
 
