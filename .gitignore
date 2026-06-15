@@ -13,3 +13,18 @@ __pycache__/
 chroma_db/
 
 conversar.py
+
+# Ignora a pasta oculta de plugins
+**/.terraform/*
+
+# Ignora os arquivos de estado com dados sensíveis (CRUCIAL!)
+*.tfstate
+*.tfstate.*
+
+# Ignora arquivos de log de erro
+crash.log
+crash.*.log
+
+# Ignora arquivos de variáveis secretas (se você usar no futuro)
+*.tfvars
+*.tfvars.json
