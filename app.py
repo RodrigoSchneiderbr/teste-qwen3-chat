@@ -87,7 +87,7 @@ with st.sidebar:
 st.title(f"Olá, {nome_usuario}! 👋")
 
 if st.session_state.retrievers is not None:
-    st.caption("🟢 **Modo RAG Ativado:** A IA usará o PDF fornecido com a Busca Híbrida.")
+    st.caption("🟢 **Modo RAG Ativado:** A IA usará o PDF fornecido com a Busca Híbrida com memória.")
 else:
     st.caption("⚪ **Chat Normal:** A IA usará apenas seu conhecimento pré-treinado.")
 
