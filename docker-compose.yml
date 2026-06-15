@@ -24,9 +24,7 @@ services:
       - ollama
     environment:
       - OLLAMA_HOST=http://ollama:11434
-    # Substitui a trava padrão pelo terminal
     entrypoint: /bin/sh
-    # O sinal "|" avisa que o que vem abaixo é um script de texto único
     command: 
       - -c
       - |
